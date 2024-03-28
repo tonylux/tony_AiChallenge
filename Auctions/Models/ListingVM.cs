@@ -16,7 +16,7 @@ namespace Auctions.Models
         [Display(Name = "Image")]
         public IFormFile Image { get; set; }
         [Display(Name = "Est vendu")]
-        public bool IsSold { get; set; } = false;
+        public bool IsSold { get; set; }
 
         [Required]
         public string? IdentityUserId { get; set; }
