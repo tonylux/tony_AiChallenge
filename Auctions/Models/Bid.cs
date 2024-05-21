@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 
@@ -8,6 +8,8 @@ namespace Auctions.Models
     {
         public int Id { get; set; }
         public double Price { get; set; }
+
+        public DateTime DatePlaced { get; set; }
 
         [Required]
         public string? IdentityUserId { get; set; }

@@ -1,4 +1,4 @@
-﻿using Auctions.Models;
+using Auctions.Models;
 
 namespace Auctions.Data.Services
 {

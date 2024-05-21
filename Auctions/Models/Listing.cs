@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -15,8 +15,9 @@ namespace Auctions.Models
         public bool IsSold { get; set; }
 
         [Required]
-        public string? IdentityUserId { get; set; }
         [ForeignKey("IdentityUserId")]
+        public string? IdentityUserId { get; set; }
+       
         public IdentityUser? User { get; set; }
 
         public List<Bid>? Bids { get; set; }

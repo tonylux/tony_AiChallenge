@@ -1,7 +1,5 @@
 using Auctions.Data;
-using Auctions.Data.Services;
-using System.IO;
-using Microsoft.AspNetCore.Identity;
+using Auctions.DependenciesInjections;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -10,33 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
-builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = false)
-        .AddRoles<IdentityRole>()
-        .AddEntityFrameworkStores<ApplicationDbContext>();
+builder.Services.AddCustomServices(connectionString, builder.Environment);
 
-//var _logStream = new StreamWriter("auctionlogs.txt", append: true);
-
-if(builder.Environment.IsDevelopment())
-{
-    builder.Services.AddDbContext<ApplicationDbContext>(options => {
-        options.UseInMemoryDatabase("AuctionsDatabase"); 
-        //options.LogTo(_logStream.WriteLine, Microsoft.Extensions.Logging.LogLevel.Trace);
-        //options.EnableSensitiveDataLogging();
-    }); 
-}
-else
-{
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlServer(connectionString));
-}
-
-builder.Services.AddControllersWithViews();
-
-builder.Services.AddScoped<IListingsService, ListingsService>();
-builder.Services.AddScoped<IBidsService, BidsService>();
-builder.Services.AddScoped<ICommentsService, CommentsService>();
 
 var app = builder.Build();
 
@@ -61,13 +35,18 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 
-if(app.Environment.IsDevelopment())
-{   
+if (app.Environment.IsDevelopment())
+{
     var scopeFactory = app.Services.GetRequiredService<IServiceScopeFactory>();
     using var scope = scopeFactory.CreateScope();
 
-    DatabaseSeeder.Seed(scope.ServiceProvider); 
+    _ = DatabaseSeeder.Seed(scope.ServiceProvider);
 }
+
+app.UseEndpoints(endpoints =>
+{
+    _ = endpoints.MapHub<AuctionHub>("/auctionhub");
+});
 
 app.MapControllerRoute(
     name: "default",

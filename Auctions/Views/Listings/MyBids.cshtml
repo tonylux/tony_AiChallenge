@@ -17,7 +17,7 @@
                 <h5><a asp-action="Details" asp-route-id="@bid.Listing.Id" style="color: black;">@bid.Listing.Title</a></h5>
                 <div>@bid.Listing.Description</div>
                 <div>Enchère: $@bid.Listing.Price.ToString("N2")</div>
-                <div>Publiée par: @bid.Listing.User.Email</div>
+                <div>Publiée par: @bid.Listing.User?.UserName ?? "Utilisateur inconnu")</div>
             </div>
         </div>
     </div>

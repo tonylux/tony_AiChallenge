@@ -1,20 +1,23 @@
-﻿using Auctions.Models;
+using Auctions.Models;
 
 namespace Auctions.Data.Services
 {
     public class CommentsService : ICommentsService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IApplicationDbContext _context;
 
-        public CommentsService(ApplicationDbContext context)
+        public CommentsService(IApplicationDbContext context)
         {
             _context = context;
         }
-
-
         public async Task Add(Comment comment)
         {
-            _context.Comments.Add(comment);
+            if (comment == null)
+            {
+                throw new ArgumentNullException(nameof(comment), "Le commentaire ne peut pas être nul");
+            }
+
+            await _context.Comments.AddAsync(comment);
             await _context.SaveChangesAsync();
         }
     }

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -18,9 +18,8 @@ namespace Auctions.Models
         [Display(Name = "Est vendu")]
         public bool IsSold { get; set; }
 
-        [Required]
-        public string? IdentityUserId { get; set; }
         [ForeignKey("IdentityUserId")]
         public IdentityUser? User { get; set; }
     }
 }
+

@@ -1,4 +1,4 @@
-﻿using Auctions.Models;
+using Auctions.Models;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -6,16 +6,20 @@ namespace Auctions.Data.Services
 {
     public class ListingsService : IListingsService
     {
-        private readonly ApplicationDbContext _context;
+        private readonly IApplicationDbContext _context;
 
-        public ListingsService(ApplicationDbContext context)
+        public ListingsService(IApplicationDbContext context)
         {
             _context = context;
         }
 
         public async Task Add(Listing listing)
         {
-            _context.Listings.Add(listing);
+            if (listing == null)
+            {
+                throw new ArgumentNullException(nameof(listing), "Le listing ne peut pas être nul");
+            }
+            await _context.Listings.AddAsync(listing);
             await _context.SaveChangesAsync();
         }
 
@@ -24,7 +28,7 @@ namespace Auctions.Data.Services
             var applicationDbContext = _context.Listings.Include(l => l.User);
             return applicationDbContext;
         }
-
+       
         public async Task<Listing> GetById(int? id)
         {
             var listing = await _context.Listings
@@ -33,6 +37,7 @@ namespace Auctions.Data.Services
                 .Include(l => l.Bids)
                 .ThenInclude(l => l.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
+           
             return listing;
         }
 

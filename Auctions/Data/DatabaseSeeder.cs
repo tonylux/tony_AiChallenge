@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using Microsoft.AspNetCore.Identity;
 using Auctions.Models;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace Auctions.Data
@@ -9,7 +10,7 @@ namespace Auctions.Data
     public static class DatabaseSeeder
     {
 
-        public static void Seed(IServiceProvider serviceProvider)
+        public static async Task Seed(IServiceProvider serviceProvider)
         {
             var context = serviceProvider.GetRequiredService<ApplicationDbContext>();
 
@@ -17,10 +18,10 @@ namespace Auctions.Data
             SeedUsers(context);
 
             // ############################  add products  ############################
-           SeedProducts(context);
+            await SeedProductsAsync(context);
         }
 
-         
+
         private static void SeedUsers(ApplicationDbContext context)
         {
             // ############################  add admin user  ############################        
@@ -139,52 +140,35 @@ namespace Auctions.Data
             // ############################  save changes  ############################
             context.SaveChanges();
         }
-    
 
-        private static void SeedProducts(ApplicationDbContext context)
+        private static async Task AddProductAsync(ApplicationDbContext context, string title, string description, double price, string imagePath, string userId)
         {
-            var identityUserAdmin = context.Users.FirstOrDefault(u => u.Email == "admin@calicot.com");
+            var listing = new Listing
+            {
+                Title = title,
+                Description = description,
+                Price = price,
+                ImagePath = imagePath,
+                IdentityUserId = userId
+            };
+
+            await context.Listings.AddAsync(listing);
+        }
+
+        private static async Task SeedProductsAsync(ApplicationDbContext context)
+        {
+            var identityUserAdmin = await context.Users.FirstOrDefaultAsync(u => u.Email == "admin@calicot.com");
 
             if (!context.Listings.Any())
             {
-                context.Listings.AddRange(
-                    new Listing
-                        {
-                            Title = "Xbox 360",
-                            Description = "Xbox 360 usagée mais en excellente condition, avec 2 manettes et 5 jeux.",
-                            Price = 199,
-                            ImagePath = "xbox360.jpg",
-                            IdentityUserId = identityUserAdmin?.Id
-                        },
-                        new Listing
-                        {
-                            Title = "iPhone 15 Pro",
-                            Description = "iPhone 15 Pro, 256GB, couleur or rose, en excellente condition.",
-                            Price = 699,
-                            ImagePath = "iphone-15-pro.jpg",
-                            IdentityUserId = identityUserAdmin?.Id
-                        },
-                        new Listing
-                        {
-                            Title = "MacBook Air M2",
-                            Description = "MacBook Air 13 pouces, M2, CPU 10 coeurs, 16Go RAM, 512Go SSD, en excellente condition.",
-                            Price = 1199,
-                            ImagePath = "macbook-air-13.jpg",
-                            IdentityUserId = identityUserAdmin?.Id
-                        },
-                        new Listing
-                        {
-                            Title = "Samsung Galaxy Watch 5",
-                            Description = "Montre intelligente Samsung Galaxy Watch 5, jamais utilisée, dans sa boîte.",
-                            Price = 375,
-                            ImagePath = "samsung-galaxy-watch5.jpg",
-                            IdentityUserId = identityUserAdmin?.Id
-                        }
-                );
+                await AddProductAsync(context, "Xbox 360", "Xbox 360 usagée mais en excellente condition, avec 2 manettes et 5 jeux.", 199, "xbox360.jpg", identityUserAdmin?.Id);
+                await AddProductAsync(context, "iPhone 15 Pro", "iPhone 15 Pro, 256GB, couleur or rose, en excellente condition.", 699, "iphone-15-pro.jpg", identityUserAdmin?.Id);
+                await AddProductAsync(context, "MacBook Air M2", "MacBook Air 13 pouces, M2, CPU 10 coeurs, 16Go RAM, 512Go SSD, en excellente condition.", 1199, "macbook-air-13.jpg", identityUserAdmin?.Id);
+                await AddProductAsync(context, "Samsung Galaxy Watch 5", "Montre intelligente Samsung Galaxy Watch 5, jamais utilisée, dans sa boîte.", 375, "samsung-galaxy-watch5.jpg", identityUserAdmin?.Id);
             }
 
             // ############################  save changes  ############################
-            context.SaveChanges();
+            await context.SaveChangesAsync();
         }
     }
 }

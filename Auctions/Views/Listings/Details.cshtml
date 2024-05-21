@@ -6,15 +6,15 @@
     ViewData["Title"] = "Détail";
 }
 
-@if(User!.Identity!.IsAuthenticated)
+@if (User!.Identity!.IsAuthenticated)
 {
-    @if(Model.IsSold ==true)
+    @if (Model.IsSold == true)
     {
-        @foreach(var bid in Model?.Bids!)
+        @foreach (var bid in Model?.Bids!)
         {
-            @if(bid.Price == Model?.Price)
+            @if (bid.Price == Model?.Price)
             {
-                @if(bid.IdentityUserId == userManager.GetUserId(User))
+                @if (bid.IdentityUserId == userManager.GetUserId(User))
                 {
                     <h5>Félicitations, vous êtes le gagnant !</h5>
                 }
@@ -37,23 +37,24 @@
         <div class="col col-xs-6 col-lg-5">
             <img src="~/Images/@Model?.ImagePath" style="width: 100%; max-height: 60vh;" />
         </div>
-        <div class="col col-xs-6 col-lg-7">           
+        <div class="col col-xs-6 col-lg-7">
             <div>@Model?.Description</div>
-            @if(User.Identity.IsAuthenticated)
+            <p>Prix de l'enchère actuelle : <span id="bidPrice"></span></p>
+            @if (User.Identity.IsAuthenticated)
             {
                 <form asp-action="AddBid" method="post">
                     <div>
-                        Enchère: $ <input type="number" min="0" step="1" name="Price" placeholder="@Model?.Price.ToString("N2")"/>
-                        <input type="hidden" name="IdentityUserId" class="form-control" value="@userManager.GetUserId(User)"/>
+                        @Html.ValidationMessageFor(model => model.Price, "", new { @class = "text-danger" })
+                        Enchère: $ <input type="number" min="0" step="1" name="Price" placeholder="@Model?.Price.ToString("N2")" />                    
                         <input type="hidden" name="ListingId" class="form-control" value="@Model?.Id" />
                         <input type="submit" class="btn btn-primary">
                     </div>
                 </form>
                 <p>Enchère soumise : @Model?.Bids?.Count</p>
                 <br>
-                @if(userManager.GetUserId(User) == Model?.User?.Id)
+                @if (userManager.GetUserId(User) == Model?.User?.Id)
                 {
-                    @foreach(var bid in Model?.Bids!)
+                    @foreach (var bid in Model?.Bids!)
                     {
                         <ul style="list-style-type: none;">
                             @bid?.User?.UserName a enchéri $@bid?.Price.ToString("N2").
@@ -76,11 +77,11 @@
             {
                 @if (userManager.GetUserId(User) == Model?.User?.Id)
                 {
-                    @if(Model?.IsSold == false)
+                    @if (Model?.IsSold == false)
                     {
                         <a asp-action="CloseBidding" asp-route-id="@Model.Id">Fermer les enchères</a>
                     }
-                    
+
                 }
             }
         </div>
@@ -95,24 +96,22 @@
         <form asp-action="AddComment" method="post">
             <h6>Ajouter un commentaire</h6>
             <textarea class="form-control" aria-label="With textarea" name="Content" style="width: 40%; vertical-align:top;"></textarea>
-            <input type="hidden" name="IdentityUserId" class="form-control" value="@userManager.GetUserId(User)" />
-            <input type="hidden" name="ListingId" class="form-control" value="@Model?.Id" />
             <input type="submit" class="btn btn-primary" style="display: inline-block; margin-top:10px;">
         </form>
     </div>
 }
 else
 {
-    <div class="container">       
-            <h6>Ajouter un commentaire</h6>
-            <textarea class="form-control" aria-label="With textarea" name="Content" style="width: 40%; vertical-align:top;"></textarea>          
-            <input type="submit" disabled class="btn btn-primary" style="display: inline-block; margin-top:10px;">       
-    </div>   
+    <div class="container">
+        <h6>Ajouter un commentaire</h6>
+        <textarea class="form-control" aria-label="With textarea" name="Content" style="width: 40%; vertical-align:top;"></textarea>
+        <input type="submit" disabled class="btn btn-primary" style="display: inline-block; margin-top:10px;">
+    </div>
 }
 <br>
 <div class="container">
     <h6>Commentaires</h6>
-    @foreach(var comment in Model?.Comments!)
+    @foreach (var comment in Model?.Comments!)
     {
         <div style="border:1px solid lightgray; margin: 10px; padding: 10px; border-radius: 10px; width: 40%;">
             <p>@comment.Content - @comment?.User?.UserName</p>
@@ -120,3 +119,18 @@ else
     }
 </div>
 
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/3.1.7/signalr.min.js"></script>
+    <script>
+        var connection = new signalR.HubConnectionBuilder().withUrl("/auctionHub").build();
+
+        connection.on("ReceiveBid", function (price) {
+            // Mettez à jour la valeur de l'enchère sur la page
+            document.getElementById("bidPrice").innerText = price;
+        });
+
+        connection.start().catch(function (err) {
+            return console.error(err.toString());
+        });
+    </script>
+}
