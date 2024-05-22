@@ -33,6 +33,6 @@ namespace Auctions.Data.Services
                            .Include(b => b.Listing)
                            .ThenInclude(l => l.User);
         }
-
+        public Bid GetLatestBid() => _context.Bids.OrderByDescending(b => b.DatePlaced).ToList().FirstOrDefault();
     }
 }

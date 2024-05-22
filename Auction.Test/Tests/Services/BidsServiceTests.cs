@@ -16,8 +16,6 @@ public class BidsServiceTests
     public void SetUp()
     {
         _context = Substitute.For<IApplicationDbContext>();
-        _dbSet = Substitute.For<DbSet<Bid>, IQueryable<Bid>>();
-        _context.Bids.Returns(_dbSet);
         _service = new BidsService(_context);
     }
 
@@ -26,14 +24,17 @@ public class BidsServiceTests
     {
         // Arrange
         var bid = new Bid { Price = 100 };
+        var bids = Substitute.For<DbSet<Bid>, IQueryable<Bid>>();
+        _context.Bids.Returns(bids);
 
         // Act
         await _service.Add(bid);
 
         // Assert
-        await _dbSet.Received(1).AddAsync(bid);
+        await bids.Received().AddAsync(bid);
         await _context.Received(1).SaveChangesAsync();
     }
+
 
     [Test]
     public void Add_ShouldThrowArgumentException_WhenBidAmountIsLessThanOrEqualToZero()
@@ -54,24 +55,48 @@ public class BidsServiceTests
     {
         // Arrange
         var bids = new List<Bid>
-    {
-        new Bid { Id = 1, Price = 100 },
-        new Bid { Id = 2, Price = 200 },
-        new Bid { Id = 3, Price = 300 }
-    }.AsQueryable();
-
-        var mockSet = Substitute.For<DbSet<Bid>, IQueryable<Bid>>();
-        ((IQueryable<Bid>)mockSet).Provider.Returns(bids.Provider);
-        ((IQueryable<Bid>)mockSet).Expression.Returns(bids.Expression);
-        ((IQueryable<Bid>)mockSet).ElementType.Returns(bids.ElementType);
-        ((IQueryable<Bid>)mockSet).GetEnumerator().Returns(bids.GetEnumerator());
-
-        _context.Bids.Returns(mockSet);
-
+        {
+            new Bid { Id = 1, Price = 100 },
+            new Bid { Id = 2, Price = 200 },
+            new Bid { Id = 3, Price = 300 }
+        }.AsQueryable();
+        var mockBids = CreateDbSetSubstitute(bids);
+        _context.Bids.Returns(mockBids);
         // Act
         var result = _service.GetAll();
 
         // Assert
         Assert.That(result, Is.EqualTo(bids));
+    }
+
+    private static DbSet<Bid> CreateDbSetSubstitute(IQueryable<Bid> queryableBids)
+    {
+        var dbSet = Substitute.For<DbSet<Bid>, IQueryable<Bid>>();
+        ((IQueryable<Bid>)dbSet).Provider.Returns(queryableBids.Provider);
+        ((IQueryable<Bid>)dbSet).Expression.Returns(queryableBids.Expression);
+        ((IQueryable<Bid>)dbSet).ElementType.Returns(queryableBids.ElementType);
+        ((IQueryable<Bid>)dbSet).GetEnumerator().Returns(queryableBids.GetEnumerator());
+
+        return dbSet;
+    }
+
+    [Test]
+    public void GetLatestBid_ReturnsLatestBid()
+    {
+        // Arrange
+        var bids = new List<Bid>
+        {
+            new Bid { Price = 100, DatePlaced = DateTime.Now.AddDays(-1) },
+            new Bid { Price = 200, DatePlaced = DateTime.Now }
+        }.AsQueryable();
+
+        var mockBids = CreateDbSetSubstitute(bids);
+        _context.Bids.Returns(mockBids);
+
+        // Act
+        var latestBid = _service.GetLatestBid();
+
+        // Assert
+        Assert.That(latestBid, Is.EqualTo(bids.Last()));
     }
 }

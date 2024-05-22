@@ -1,4 +1,4 @@
-﻿using Auctions.Models;
+using Auctions.Models;
 using Microsoft.EntityFrameworkCore;
 
 public interface IApplicationDbContext

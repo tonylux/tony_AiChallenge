@@ -6,5 +6,6 @@ namespace Auctions.Data.Services
     {
         Task Add(Bid bid);
         IQueryable<Bid> GetAll();
+        Bid GetLatestBid();
     }
 }
